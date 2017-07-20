@@ -30,13 +30,15 @@ void twi_init() {
 
 	twi_status = FREE;
 
+	TWCR = BIT(TWIE);
+
 	SREG |= BIT(7);
 }
 
-uint8_t twi_send_start() {
-	uint8_t result = 1;
+void twi_send_start() {
+	//uint8_t result = 1;
 	TWCR = TWI_SEND_START;
-	result = twi_wait_for_twint(MAX_ITER_WAIT_TWINT);
+	/*result = twi_wait_for_twint(MAX_ITER_WAIT_TWINT);
 	if(result) {
 		switch(TW_STATUS) {
 			case TW_START: {
@@ -59,9 +61,9 @@ uint8_t twi_send_start() {
 				result = 0;
 			}
 		}
-	}	
+	}	*/
 
-	return result;
+	//return result;
 }
 
 void twi_send_stop() {
@@ -69,11 +71,11 @@ void twi_send_stop() {
 	twi_status = FREE;
 }
 
-uint8_t twi_send_sla_r(uint8_t addr) {
-	uint8_t result = 1;
+void twi_send_sla_r(uint8_t addr) {
+	//uint8_t result = 1;
 	TWDR = SLA_R(addr);
 	TWCR = TWI_SEND_TWDR;
-	result = twi_wait_for_twint(MAX_ITER_WAIT_TWINT);
+	/*result = twi_wait_for_twint(MAX_ITER_WAIT_TWINT);
 	if(result) {
 		switch(TW_STATUS) {
 			case TW_MR_SLA_ACK: {
@@ -106,14 +108,14 @@ uint8_t twi_send_sla_r(uint8_t addr) {
 		}
 	}
 	
-	return result;
+	return result;*/
 }
 
-uint8_t twi_send_sla_w(uint8_t addr) {
-	uint8_t result = 1;
+void twi_send_sla_w(uint8_t addr) {
+	//uint8_t result = 1;
 	TWDR = SLA_W(addr);
 	TWCR = TWI_SEND_TWDR;
-	result = twi_wait_for_twint(MAX_ITER_WAIT_TWINT);
+	/*result = twi_wait_for_twint(MAX_ITER_WAIT_TWINT);
 
 	if(result) {
 		switch(TW_STATUS) {
@@ -147,14 +149,14 @@ uint8_t twi_send_sla_w(uint8_t addr) {
 		}
 	}
 	
-	return result;
+	return result;*/
 }
 
-uint8_t twi_send_data(uint8_t data) {
-	uint8_t result = 1;
+void twi_send_data(uint8_t data) {
+	//uint8_t result = 1;
 	TWDR = data;
 	TWCR = TWI_SEND_TWDR;
-	result = twi_wait_for_twint(MAX_ITER_WAIT_TWINT);
+	/*result = twi_wait_for_twint(MAX_ITER_WAIT_TWINT);
 	
 	if(result) {
 		switch(TW_STATUS) {
@@ -188,13 +190,13 @@ uint8_t twi_send_data(uint8_t data) {
 		}
 	}
 	
-	return result;
+	return result;*/
 }
 
-uint8_t twi_receive_data(uint8_t * dest, uint8_t answer) {
-	uint8_t result = 1;
+void twi_receive_data(uint8_t * dest, uint8_t answer) {
+	//uint8_t result = 1;
 	TWCR = (answer) ? TWI_SEND_ACK : TWI_SEND_NACK;		
-	result = twi_wait_for_twint(MAX_ITER_WAIT_TWINT);
+	/*result = twi_wait_for_twint(MAX_ITER_WAIT_TWINT);
 	
 	if(result) {
 		switch(TW_STATUS) {
@@ -224,7 +226,7 @@ uint8_t twi_receive_data(uint8_t * dest, uint8_t answer) {
 		}
 	}
 
-	return result;
+	return result;*/
 }
 
 uint8_t twi_wait_for_twint(uint16_t max_iter) {
@@ -241,4 +243,68 @@ uint8_t twi_wait_for_twint(uint16_t max_iter) {
 	}
 
 	return result;
+}
+
+ISR(TWI_vect) {
+	switch(TW_STATUS) {
+		case TW_START: {
+			twi_status = START_SENT;
+			break;
+		}
+		case TW_REP_START: {
+			twi_status = REP_START_SENT;
+			break;
+		}
+		case TW_MT_SLA_ACK: {
+			twi_status = MT;
+			break;
+		}
+		case TW_MT_SLA_NACK: {
+			twi_status = ERROR_DETECTED;
+			twi_error = SLA_W_NACK_RECEIVED;
+			break;
+		}
+		case TW_MT_ARB_LOST: {
+			twi_status = ERROR_DETECTED;
+			twi_error = ARBITRATION_LOST;
+			break;
+		} 
+		case TW_MR_SLA_ACK: {
+			twi_status = MR;
+			break;
+		}
+		case TW_MR_SLA_NACK: {
+			twi_status = ERROR_DETECTED;
+			twi_error = SLA_R_NACK_RECEIVED;
+			break;
+		}
+		case TW_MT_DATA_ACK: {
+			twi_status = MT;
+			break;
+		}
+		case TW_MT_DATA_NACK: {
+			twi_status = ERROR_DETECTED;
+			twi_error = DATA_NACK_RECEIVED;
+			break;
+		}
+		case TW_MR_DATA_ACK:
+		case TW_MR_DATA_NACK: {
+			*dest = TWDR;
+			twi_status = MR;
+			break;
+		}
+		case TW_BUS_ERROR: {
+			twi_status = ERROR_DETECTED;
+			twi_error = BUS_ERROR;
+			break;
+		}
+		default: {
+			twi_status = ERROR_DETECTED;
+			twi_error = ANOTHER_ERROR;
+		}
+	}
+
+	//From datasheet: Writing 1 to TWINT clears flag.
+	//So, logically to set this flag - it must be written by zero
+	TWCR &= ~BIT(TWINT); //setting TWINT Flag
 }

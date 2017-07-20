@@ -5,8 +5,9 @@ SPEED = 115200
 
 SRC =	main.c \
 		./src/usart.c \
-		./src/twi_usual.c \
-		./src/bh1750.c
+		./src/twi_interrupts.c \
+		./src/bh1750.c \
+		./src/ring_buffer.c
 
 all:
 	avr-gcc -Wall -Os -DF_CPU=$(F_CPU) -mmcu=$(DEVICE) $(SRC)

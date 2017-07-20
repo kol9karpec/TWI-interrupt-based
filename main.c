@@ -12,22 +12,24 @@ int main(void) {
 	init_led();
 
 	USART0_init(BAUD_RATE(115200));
-	twi_init();
+	//twi_init();
 	
 	uint8_t h_byte = 0,
-		l_byte = 0;
+			l_byte = 0;
 	
 	uint16_t result = 0;
 
 	while(1) {
-		bh1750_send_command(BH1750_ONE_TIME_H_RES_MODE);
+		/*bh1750_send_command(BH1750_ONE_TIME_H_RES_MODE);
 		_delay_ms(180);
 		bh1750_read_data(&l_byte, &h_byte);
 
 		result = ((h_byte << 8) | l_byte);
 		
 		USART0_print("Light: %u\n",result);
+		*/
 
+		USART0_print("All fine!\n");
 		LED_PORT ^= BIT(LED_BIT);
 		_delay_ms(250);
 	}

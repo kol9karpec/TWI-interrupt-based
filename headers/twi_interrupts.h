@@ -16,11 +16,11 @@
 #define TWI_FREQ 100000
 #define TWI_STATUS_REG (TWSR & 0xf8)
 
-#define TWI_SEND_START (BIT(TWINT) | BIT(TWSTA) | BIT(TWEN))
-#define TWI_SEND_TWDR (BIT(TWINT) | BIT(TWEN))
-#define TWI_SEND_STOP (BIT(TWINT) | BIT(TWSTO) | BIT(TWEN))
-#define TWI_SEND_ACK (BIT(TWINT) | BIT(TWEA) | BIT(TWEN))
-#define TWI_SEND_NACK (BIT(TWINT) | BIT(TWEN))
+#define TWI_SEND_START (BIT(TWINT) | BIT(TWSTA) | BIT(TWEN) | BIT(TWIE))
+#define TWI_SEND_TWDR (BIT(TWINT) | BIT(TWEN) | BIT(TWIE))
+#define TWI_SEND_STOP (BIT(TWINT) | BIT(TWSTO) | BIT(TWEN) | BIT(TWIE))
+#define TWI_SEND_ACK (BIT(TWINT) | BIT(TWEA) | BIT(TWEN) | BIT(TWIE))
+#define TWI_SEND_NACK (BIT(TWINT) | BIT(TWEN) | BIT(TWIE))
 
 
 #define SLA_W(addr) ((addr << 1) & 0xfe)
@@ -56,10 +56,10 @@ extern volatile twi_error_t twi_error;
 extern volatile twi_status_t twi_status; 
 
 void twi_init();
-uint8_t twi_send_start();
+void twi_send_start();
 void twi_send_stop();
-uint8_t twi_send_sla_r(uint8_t addr);
-uint8_t twi_send_sla_w(uint8_t addr);
-uint8_t twi_send_data(uint8_t data);
-uint8_t twi_receive_data(uint8_t * dest, uint8_t answer);
+void twi_send_sla_r(uint8_t addr);
+void twi_send_sla_w(uint8_t addr);
+void twi_send_data(uint8_t data);
+void twi_receive_data(uint8_t * dest, uint8_t answer);
 uint8_t twi_wait_for_twint(uint16_t max_iter);
